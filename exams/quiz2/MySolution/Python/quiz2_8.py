@@ -19,5 +19,21 @@
 #
 # *)
 
-def foreach_to_get_at(foreach): # your implementation below
+def foreach_to_get_at(foreach):# your implementation below
+  def get_at(xs, i):
+    result = None
+    found = False
 
+    def work(element):
+      nonlocal found, result, i
+      if not found:
+        if i == 0:
+          result = element
+          found = True
+        else:
+          i -= 1
+    foreach(xs, work)
+    if not found:
+      raise IndexError
+    return result
+  return get_at
