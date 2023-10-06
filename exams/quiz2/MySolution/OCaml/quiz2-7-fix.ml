@@ -17,7 +17,11 @@ match xs with
 
 (* ************************************************ *)
 
-let list_append(xs: 'a list)(ys: 'a list): 'a list = ....
+let list_append(xs: 'a list)(ys: 'a list): 'a list = 
+ let reverse = list_foldleft(fun acc x -> x :: acc)[] in
+  let reversed_xs = reverse xs in
+   list_foldleft(fun acc x -> x :: acc)ys reversed_xs
+;;
 
 (* ************************************************ *)
 
