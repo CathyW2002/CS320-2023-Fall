@@ -1,4 +1,4 @@
-#use "./../../../../classblib/OCaml/MyOCaml.ml";;
+#use "../../../classlib/OCaml/MyOCaml.ml";;
 
 (*
 
