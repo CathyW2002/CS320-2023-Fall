@@ -359,7 +359,7 @@ let compile (s : string) : string =
       "Call;\n"
     | Let (x, m, n) -> 
           "Push " ^ x ^ "; " ^ (* Push the function name *)
-          compile_expr m ^ (* Compile the function body *)
+          compile_expr m ^ (* Compile the function body *) "Push " ^ x ^ "; " ^
           "Bind; " ^ (* Bind the function name to the function body *)
           compile_expr n (* Compile the rest of the expression *)
     | Seq (m, n) -> compile_expr m ^ compile_expr n
