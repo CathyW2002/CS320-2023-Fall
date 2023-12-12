@@ -293,19 +293,15 @@ let scope_expr (m : expr) : expr =
        | None -> raise (UnboundVariable s)
        | Some x -> Var x)
     | Fun (f, x, m) -> 
-      let fvar = new_var f in
-      let xvar = new_var x in
-      let m = aux ((f, fvar) :: (x, xvar) :: scope) m in
-      Fun (fvar, xvar, m)
+      let m = aux ((f, f) :: (x, x) :: scope) m in
+      Fun (f, x, m)
     | App (m, n) ->
       let m = aux scope m in
       let n = aux scope n in
       App (m, n)
     | Let (x, m, n) ->
-      let xvar = new_var x in
-      let m = aux scope m in
-      let n = aux ((x, xvar) :: scope) n in
-      Let (xvar, m, n)
+      let n = aux ((x, x) :: scope) n in
+      Let (x, m, n)
     | Seq (m, n) ->
       let m = aux scope m in
       let n = aux scope n in
@@ -340,23 +336,40 @@ let compile (s : string) : string =
     | UOpr (Neg, m) -> compile_expr m ^ "Neg;\n"
     | UOpr (Not, m) -> compile_expr m ^ "Not;\n"
     | BOpr (Add, m, n) -> compile_expr m ^ compile_expr n ^ "Add;\n"
-    | BOpr (Sub, m, n) -> compile_expr m ^ compile_expr n ^ "Sub;\n"
+    | BOpr (Sub, m, n) -> 
+      compile_expr n ^ compile_expr m ^ "Sub;\n"
     | BOpr (Mul, m, n) -> compile_expr m ^ compile_expr n ^ "Mul;\n"
     | BOpr (Div, m, n) -> compile_expr m ^ compile_expr n ^ "Div;\n"
     | BOpr (Mod, m, n) -> compile_expr m ^ compile_expr n ^ "Mod;\n"
     | BOpr (And, m, n) -> compile_expr m ^ compile_expr n ^ "And;\n"
     | BOpr (Or, m, n) -> compile_expr m ^ compile_expr n ^ "Or;\n"
-    | BOpr (Lt, m, n) -> compile_expr m ^ compile_expr n ^ "Lt;\n"
-    | BOpr (Gt, m, n) -> compile_expr m ^ compile_expr n ^ "Gt;\n"
-    | BOpr (Lte, m, n) -> compile_expr m ^ compile_expr n ^ "Lte;\n"
-    | BOpr (Gte, m, n) -> compile_expr m ^ compile_expr n ^ "Gte;\n"
+    | BOpr (Lt, m, n) -> compile_expr m ^ compile_expr n ^ "Swap;\n" ^ "Lt;\n"
+    | BOpr (Gt, m, n) -> compile_expr m ^ compile_expr n ^ "Swap;\n" ^ "Gt;\n"
+    | BOpr (Lte, m, n) -> compile_expr m ^ compile_expr n ^ "Swap;\n" ^ "Lte;\n"
+    | BOpr (Gte, m, n) -> compile_expr m ^ compile_expr n ^ "Swap;\n" ^ "Gte;\n"
     | BOpr (Eq, m, n) -> compile_expr m ^ compile_expr n ^ "Eq;\n"
-    | Var s -> "Lookup " ^ s ^ ";\n"
-    | Fun (f, x, m) -> "Bind " ^ f ^ ";\n" ^ compile_expr m
-    | App (m, n) -> compile_expr m ^ compile_expr n ^ "Call;\n"
-    | Let (x, m, n) -> "Eval;\n" ^ compile_expr m ^ "Bind " ^ x ^ ";\n" ^ compile_expr n
+    | Var s -> "Push " ^ s ^ ";\n" ^ "Lookup;\n"
+    | Fun (f, x, m) -> 
+      "Fun Push " ^ x ^ ";\n " ^ "Bind;\n" ^
+      compile_expr m ^ 
+      "End; " 
+    | App (m, n) ->
+      compile_expr n ^ (* Compile and push the argument *)
+      compile_expr m ^ (* Compile and push the function *)
+      "Call;\n"
+    | Let (x, m, n) -> 
+          "Push " ^ x ^ "; " ^ (* Push the function name *)
+          compile_expr m ^ (* Compile the function body *)
+          "Bind; " ^ (* Bind the function name to the function body *)
+          compile_expr n (* Compile the rest of the expression *)
     | Seq (m, n) -> compile_expr m ^ compile_expr n
-    | Ifte (m, n1, n2) -> compile_expr m ^ "Branch " ^ compile_expr n1 ^ " " ^ compile_expr n2 ^ ";\n"
+    | Ifte (m, n1, n2) -> 
+      compile_expr m ^
+      "If " ^ 
+      (compile_expr n1 ^ "Swap;\n Return;\n ") ^
+      "Else " ^ 
+      (compile_expr n2 ^ "Swap;\n Return;\n ") ^
+      "End;\n"
     | Trace m -> compile_expr m ^ "Trace;\n"
   in
   compile_expr ast
