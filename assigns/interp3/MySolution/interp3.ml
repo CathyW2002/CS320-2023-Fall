@@ -337,7 +337,7 @@ let compile (s : string) : string =
     | UOpr (Not, m) -> compile_expr m ^ "Not;\n"
     | BOpr (Add, m, n) -> compile_expr m ^ compile_expr n ^ "Add;\n"
     | BOpr (Sub, m, n) -> 
-      compile_expr n ^ compile_expr m ^ "Sub;\n"
+      compile_expr m ^ compile_expr n ^ "Sub;\n"
     | BOpr (Mul, m, n) -> compile_expr m ^ compile_expr n ^ "Mul;\n"
     | BOpr (Div, m, n) -> compile_expr m ^ compile_expr n ^ "Div;\n"
     | BOpr (Mod, m, n) -> compile_expr m ^ compile_expr n ^ "Mod;\n"
