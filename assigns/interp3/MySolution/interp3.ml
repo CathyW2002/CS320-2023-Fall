@@ -325,6 +325,12 @@ let parse_prog (s : string) : expr =
   | _ -> raise SyntaxError
 
 let(^) = string_append
+let parse_prog (s : string) : expr =
+  match string_parse (whitespaces >> parse_expr ()) s with
+  | Some (m, []) -> scope_expr m
+  | _ -> raise SyntaxError
+
+let(^) = string_append
 
 let compile (s : string) : string =
   let ast = parse_prog s in
@@ -351,24 +357,23 @@ let compile (s : string) : string =
     | Var s -> "Push " ^ s ^ ";\n" ^ "Lookup;\n"
     | Fun (f, x, m) -> 
       "Fun Push " ^ x ^ ";\n " ^ "Bind;\n" ^
-      compile_expr m ^ 
+      compile_expr m ^  "Swap;\n Return;\n " ^
       "End; " 
     | App (m, n) ->
-      compile_expr n ^ (* Compile and push the argument *)
-      compile_expr m ^ (* Compile and push the function *)
+      compile_expr n ^ 
+      compile_expr m ^ 
       "Call;\n"
     | Let (x, m, n) -> 
-          "Push " ^ x ^ "; " ^ (* Push the function name *)
-          compile_expr m ^ (* Compile the function body *) "Push " ^ x ^ "; " ^
-          "Bind; " ^ (* Bind the function name to the function body *)
-          compile_expr n (* Compile the rest of the expression *)
+         "Push " ^ x ^ ";\n" ^
+          compile_expr m ^ "Push " ^ x ^ ";\n" ^ "Bind;\n" ^ 
+          compile_expr n
     | Seq (m, n) -> compile_expr m ^ compile_expr n
     | Ifte (m, n1, n2) -> 
       compile_expr m ^
       "If " ^ 
       (compile_expr n1 ^ "Swap;\n Return;\n ") ^
       "Else " ^ 
-      (compile_expr n2 ^ "Swap;\n Return;\n ") ^
+      compile_expr n2  ^
       "End;\n"
     | Trace m -> compile_expr m ^ "Trace;\n"
   in
